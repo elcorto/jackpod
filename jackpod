@@ -1,0 +1,273 @@
+#!/bin/sh
+
+##set -x
+
+#-----------------------------------------------------------------------------
+# defs
+#-----------------------------------------------------------------------------
+
+prog=$(basename $0)
+
+usage(){
+    cat <<-EOF
+$prog [-S | -k (jpP) | -r (jp) | -s (p)] [-w]
+
+j = local and remote jackds in netjack2 mode
+p = pulseaudio sink "jack_out"
+P = pulseaudio service
+
+options:
+    -S       : show status
+    -k (jpP) : kill stuff (pulseaudio (P) restarts automatically
+               after kill)
+    -r (jp)  : restart, short for $prog -kX -sX
+    -s (p)   : start: p = start pulse sink if not running already
+    -w       : wifi mode (use more buffering, pay with increased AV delay)
+
+The order of actions called is: -S -k -r -s, so $prog -kX -sX will first kill,
+then start (same as -rX).
+
+-rj: There is no -sj, we always -kj first before starting local and remote
+jackds in netjack2 mode. So think of this option as -kj -sj, except that -sj is
+performed internally but is not available as an option.
+
+-sp is only useful if local and remote jackds are already running in netjack2
+mode (-rj), else a local jackd with default args is started (jackd -T -ndefault
+-T -d alsa), which is useless.
+
+-rp: when we resume from suspend (to ram) mode, then the jackd connection
+(netjack2) is still active and only the pulse sink needs a restart -> no need
+to kill the jackds, which takes a bit longer.
+
+examples:
+
+    Check status
+        $ $prog -S
+        remote jackd    NO
+        local jackd     NO
+        jack_out sink   NO
+
+    This is what you call when you need to start all
+        $ $prog -rj -sp
+        $ $prog -S
+        remote jackd    yes
+        local jackd     yes
+        jack_out sink   yes
+
+    Disable pulse sink
+        $ $prog -kp
+        $ $prog -S
+        remote jackd    yes
+        local jackd     yes
+        jack_out sink   NO
+
+    Restart only pulse sink (e.g. after resuming from suspend mode)
+        $ $prog -rp
+EOF
+}
+
+
+cmd_stop_jack_remote=$(cat <<-EOF
+    for sig in 15 9; do
+        pkill -\$sig -f 'jackd.*-d'
+        pkill -\$sig -f 'jackd.*-ndefault'
+        pkill -\$sig jack_load
+    done
+EOF
+)
+
+err(){
+    echo "error: $@"
+    exit 1
+}
+
+yesno(){
+    [ $1 -eq 0 ] && echo "yes" || echo "NO"
+}
+
+checkopt(){
+    what=$1
+    val=$2
+    [ "$what" = "$none" ] && return 1
+    echo "$what" | grep -q $val
+    return $?
+}
+
+start_jack_local(){
+    jackd $local_opts -P80 -d net $local_driver_opts >> $log 2>&1 &
+    ps aux | grep jackd >> $log 2>&1
+}
+
+
+stop_jack_local(){
+    for sig in 15 9; do
+        pkill -$sig -f 'jackd.*-d'
+        pkill -$sig -f 'jackd.*-ndefault'
+    done
+}
+
+# The action of stop_jack_remote is performed in the ssh below so that we don't
+# need to ssh twice, which would be slower.
+restart_jack_remote(){
+    ssh -T $remote <<-EOF
+        export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+        (
+        \$(date)
+        echo "kill ..."
+        $cmd_stop_jack_remote
+        echo "start jackd ..."
+        jackd $remote_opts -P80 -d alsa --device $remote_device \
+           $remote_driver_opts &
+        while ! pgrep -f 'jackd.*-P.*-d.*alsa.*--device'; do
+            echo '\$(date) waiting for jackd ...'
+            sleep 0.1
+        done
+        echo "load netmanager ..."
+        jack_load netmanager -i -c
+        ps aux | grep jackd
+        ) > jack.log 2>&1
+EOF
+}
+
+stop_jack_remote(){
+    ssh -T $remote <<-EOF
+        (
+        $cmd_stop_jack_remote
+        ) > jack.log 2>&1
+EOF
+}
+
+stop_jack(){
+    stop_jack_local
+    stop_jack_remote
+}
+
+check_broken_pulse(){
+    if ! pactl list sinks > /dev/null 2>&1; then
+        err "pulseaudio broken, try '$prog -kP'"
+    fi
+}
+
+restart_pulse(){
+    # After kill, pulse restarts immediately, w/o module-jack-sink and
+    # jack_out.
+    pid=$(pgrep pulseaudio)
+    [ -n "$pid" ] && kill $pid
+    sleep 1
+    ps -eo pid | grep -q $pid && kill -9 $pid
+    while ! pgrep pulseaudio > /dev/null; do
+        sleep 0.1
+        echo "wait for pulseaudio ..."
+    done
+}
+
+start_pulse_sink(){
+    check_broken_pulse
+    if ! pactl list sinks | grep -q jack_out; then
+        pactl load-module module-jack-sink >> $log 2>&1
+        pactl set-sink-mute jack_out false
+    fi
+}
+
+stop_pulse_sink(){
+    check_broken_pulse
+    if pactl list modules | grep -q module-jack-sink; then
+        pactl unload-module module-jack-sink
+    fi
+}
+
+restart_pulse_sink(){
+    stop_pulse_sink
+    sleep 0.5
+    start_pulse_sink
+}
+
+
+do_check_status(){
+    check_broken_pulse
+    (
+    ssh -T $remote <<-EOF
+        yesno(){
+            [ \$1 -eq 0 ] && echo "yes" || echo "NO"
+        }
+        pgrep -f 'jackd.*-P.*-d.*alsa.*--device' > /dev/null
+        echo "remote jackd: \$(yesno \$?)"
+EOF
+    pgrep -f 'jackd.*-P.*-d.*net' > /dev/null
+    echo "local jackd: $(yesno $?)"
+    pactl list sinks | grep -q jack_out
+    echo "jack_out sink: $(yesno $?)"
+    ) | column -t -s:
+}
+
+
+#-----------------------------------------------------------------------------
+# main
+#-----------------------------------------------------------------------------
+
+# The options here are meant to be changed for minimizing latency issues. The
+# only preset we have is wifi_mode, which works more or less, but will need
+# tuning for other networks. All other master and slave netjack2 related
+# options are hard-coded in the functions above.
+remote_opts="-R"
+local_opts="-S -R"
+remote_driver_opts="--nperiods 2 --period 512"
+local_driver_opts="-l1"
+wifi_mode=false
+
+check_status=false
+
+# Hard-code the remote (master) hostname and our soundcard over there. If
+# needed, add CLI flags for that or a config file, but .. really just hack
+# these two lines.
+remote=raspi
+remote_device="hw:sndrpihifiberry"
+
+# To avoid awkward gymnastics in checkopt ($# changes if any of the input args
+# is an empty string), we define a None/null/nil value here that is not the
+# empty string. Yes this tool should be written in another language.
+none="::"
+kill_what=$none
+start_what=$none
+restart_what=$none
+
+while getopts k:s:wr:hS opt; do
+    case $opt in
+        k) kill_what=$OPTARG;;
+        s) start_what=$OPTARG;;
+        w) wifi_mode=true;;
+        r) restart_what=$OPTARG;;
+        S) check_status=true;;
+        h) usage; exit 0;;
+        \?) exit 1;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if $wifi_mode; then
+    remote_driver_opts="--nperiods 2 --period 1024"
+    local_driver_opts="-l1"
+fi
+
+if $check_status; then
+    do_check_status
+    exit 0
+fi
+
+log=jack.log
+rm -f $log
+
+checkopt $kill_what j && stop_jack
+checkopt $kill_what p && stop_pulse_sink
+checkopt $kill_what P && restart_pulse
+
+checkopt $restart_what p && restart_pulse_sink
+
+if checkopt $restart_what j; then
+    check_broken_pulse
+    stop_jack_local
+    restart_jack_remote
+    start_jack_local
+fi
+
+checkopt $start_what p && start_pulse_sink
