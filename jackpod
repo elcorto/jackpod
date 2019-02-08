@@ -272,8 +272,6 @@ checkopt $kill_what j && stop_jack
 checkopt $kill_what p && stop_pulse_sink
 checkopt $kill_what P && restart_pulse
 
-checkopt $restart_what p && restart_pulse_sink
-
 if checkopt $restart_what j; then
     check_broken_pulse
     stop_jack_local
@@ -281,4 +279,5 @@ if checkopt $restart_what j; then
     start_jack_local
 fi
 
+checkopt $restart_what p && restart_pulse_sink
 checkopt $start_what p && start_pulse_sink
