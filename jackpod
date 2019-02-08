@@ -8,9 +8,11 @@
 
 prog=$(basename $0)
 
+log_fn=jack.log
+
 usage(){
     cat <<-EOF
-$prog [-S | -k (jpP) | -r (jp) | -s (p)] [-w]
+$prog [-S | -k (jpP) | -r (jp) | -s (p)] [-w -d]
 
 j = local and remote jackds in netjack2 mode
 p = pulseaudio sink "jack_out"
@@ -23,9 +25,11 @@ options:
     -r (jp)  : restart, short for $prog -kX -sX
     -s (p)   : start: p = start pulse sink if not running already
     -w       : wifi mode (use more buffering, pay with increased AV delay)
+    -d       : debug mode: write a logfile $log_fn on the local and remote
+               machine
 
-The order of actions called is: -S -k -r -s, so $prog -kX -sX will first kill,
-then start (same as -rX).
+The order of actions performed is: -S -k -r -s, so $prog -kX -sX will first
+kill, then start (same as -rX).
 
 -rj: There is no -sj, we always -kj first before starting local and remote
 jackds in netjack2 mode. So think of this option as -kj -sj, except that -sj is
@@ -125,7 +129,7 @@ restart_jack_remote(){
         echo "load netmanager ..."
         jack_load netmanager -i -c
         ps aux | grep jackd
-        ) > jack.log 2>&1
+        ) > $log 2>&1
 EOF
 }
 
@@ -133,7 +137,7 @@ stop_jack_remote(){
     ssh -T $remote <<-EOF
         (
         $cmd_stop_jack_remote
-        ) > jack.log 2>&1
+        ) > $log 2>&1
 EOF
 }
 
@@ -216,6 +220,10 @@ local_driver_opts="-l1"
 wifi_mode=false
 
 check_status=false
+debug=false
+# send stderr and stdout into the wild blue yonder, will be replaced with
+# $log_fn when debug=true
+log=/dev/null
 
 # Hard-code the remote (master) hostname and our soundcard over there. If
 # needed, add CLI flags for that or a config file, but .. really just hack
@@ -231,13 +239,14 @@ kill_what=$none
 start_what=$none
 restart_what=$none
 
-while getopts k:s:wr:hS opt; do
+while getopts k:s:wr:hSd opt; do
     case $opt in
         k) kill_what=$OPTARG;;
         s) start_what=$OPTARG;;
         w) wifi_mode=true;;
         r) restart_what=$OPTARG;;
         S) check_status=true;;
+        d) debug=true;;
         h) usage; exit 0;;
         \?) exit 1;;
     esac
@@ -249,13 +258,15 @@ if $wifi_mode; then
     local_driver_opts="-l1"
 fi
 
+if $debug; then
+    log=$log_fn
+    rm -f $log
+fi
+
 if $check_status; then
     do_check_status
     exit 0
 fi
-
-log=jack.log
-rm -f $log
 
 checkopt $kill_what j && stop_jack
 checkopt $kill_what p && stop_pulse_sink
