@@ -53,6 +53,8 @@ examples:
 
     This is what you call when you need to start all
         $ $prog -rj -sp
+    or even shorter (-rp = -sp if sink is not running)
+        $ $prog -rjp
         $ $prog -S
         remote jackd    yes
         local jackd     yes

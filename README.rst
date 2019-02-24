@@ -6,7 +6,7 @@ Control a realtime netjack2_ connection between two machines.
 Usage
 =====
 
-Use the ``jackpod`` command to set up the netjack2_ connection (``jackpod
+Use the ``jackpod`` command to set up a netjack2_ connection (``jackpod
 -rj``) and optionally start a pulseaudio sink (``jackpod -sp``, see ``pactl
 list sinks``). See ``jackpod -h`` and ``README_jack.rst`` for details.
 
@@ -19,9 +19,11 @@ or with the pulse sink ``jack_out``:
     app (``mpv --audio-device=pulse/jack_out``, browser, ...) -> pulseaudio ->
     jackd (slave) -- LAN --> jackd (master) -> sound card
 
-For sound sources which cannot select the backend they play on (such as
-``mpv``), use pulseaudio's ``pavucontrol`` tool to redirect sound (e.g. from
-the browser) to the "Jack sink (PulseAudio JACK Sink)" (``jack_out``).
+For sound sources that cannot select the backend they play on (such as the
+browser, and unlike ``mpv`` which can do that), use pulseaudio's
+``pavucontrol`` tool to redirect sound to the sink called "Jack sink
+(PulseAudio JACK Sink)", which is the ``jack_out`` sink created with ``jackpod
+-sp``.
 
 Latency & defaults
 ==================
