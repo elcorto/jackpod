@@ -115,7 +115,7 @@ stop_jack_local(){
 # The action of stop_jack_remote is performed in the ssh below so that we don't
 # need to ssh twice, which would be slower.
 restart_jack_remote(){
-    ssh -T $remote <<-EOF
+    eval "$ssh_cmd" <<-EOF
         export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
         (
         \$(date)
@@ -136,7 +136,7 @@ EOF
 }
 
 stop_jack_remote(){
-    ssh -T $remote <<-EOF
+    eval "$ssh_cmd" <<-EOF
         (
         $cmd_stop_jack_remote
         ) > $log 2>&1
@@ -192,7 +192,7 @@ restart_pulse_sink(){
 do_check_status(){
     check_broken_pulse
     (
-    ssh -T $remote <<-EOF
+    eval "$ssh_cmd" <<-EOF
         yesno(){
             [ \$1 -eq 0 ] && echo "yes" || echo "NO"
         }
@@ -240,6 +240,11 @@ none="::"
 kill_what=$none
 start_what=$none
 restart_what=$none
+
+# B/c of quoting foo, use
+#   eval $ssh_cmd [rest of ssh cmd line]
+ssh_cmd="ssh -o ConnectTimeout=2 -T $remote"
+
 
 while getopts k:s:wr:hSd opt; do
     case $opt in
