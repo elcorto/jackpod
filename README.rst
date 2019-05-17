@@ -39,11 +39,11 @@ so YMMV. Please just hack the values to fit your setup.
 Note that netjack2 is designed to be run over a stable cable connection. We
 achieve very low latency with no perceptible AV (audio-video) delay in this
 case -- important for video! There is the ``-w`` (WiFi mode) option which sets
-slightly more lose options which increase the AV-delay a bit. This will need to
+slightly more loose options which increase the AV-delay a bit. This will need to
 be adjusted for your network. So far, we had stable and reliable connections
 only via cable or when surrounding WiFis are either off or use very different
 channels. So one could just as well use a 3.5 mm audio cable, right? Maybe, but
-it would't be as cool!
+it wouldn't be as cool!
 
 .. _netjack2: https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2
 .. _hfb: https://www.hifiberry.com/shop/boards/hifiberry-dac-pro

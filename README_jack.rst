@@ -4,13 +4,13 @@ Overview
 In netJACK we start a ``jackd`` on each machine, one in master and one in slave
 mode.
 
-master: remote machine (a Raspberri Pi on our case, with amp and boxes
-attached to a Hifiberry DAC sound card)::
+master: remote machine, sound target (a Raspberri Pi on our case, with amp and
+boxes attached to a Hifiberry DAC sound card)::
 
     $ jackd -R ...
     $ jack_load netmanager -i -c
 
-slave: local machine ("slavebox")::
+slave: local machine, sound source ("slavebox")::
 
     $ jackd -S -R -d net ...
 
@@ -45,14 +45,14 @@ Test slave's Jack setup
 
 Debian client machine (slavebox)::
 
-    $ sudo -A apt install jackd2 qjackctl pulseaudio-module-jack
+    $ sudo apt install jackd2 qjackctl pulseaudio-module-jack
 
 Start server::
 
     $ jackd -d alsa
 
-It is important to sepcify the driver. With the default ``dummy`` driver, there
-is no sound.
+It is important to specify the driver (``-d`` option). With the default
+``dummy`` driver, there is no sound.
 
 List ports::
 
@@ -240,7 +240,7 @@ slave -> master (using the default sample rate of 48 kHz), no matter if sound
 is playing or not. If you find this annoying & you don't use the sink, then
 ``jackpod -kp`` and use the jack backend directly (e.g ``mpv --ao=jack``).
 
-With only the netjack2 conection active we have about 16 KiB idle traffic (no
+With only the netjack2 connection active we have about 16 KiB idle traffic (no
 sound) and the same 420 KiB traffic when playing something.
 
 
