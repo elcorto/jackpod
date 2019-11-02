@@ -1,0 +1,4 @@
+Move all the custom start stuff/kill stuff code into user systemd units, e.g. a
+pulse-sink unit that depends on jack and (already existing) pulseaudio units.
+Let systemd handle the dependencies. They are pretty trivial, that is why we
+got away w/o systemd, it is just not that elegant.
