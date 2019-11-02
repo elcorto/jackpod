@@ -21,8 +21,8 @@ P = pulseaudio service
 options:
     -S       : show status
     -k (jpP) : kill stuff (pulseaudio (P) restarts automatically
-               after kill)
-    -r (jp)  : restart, short for $prog -kX -sX
+               after kill, so -kP = -rP)
+    -r (jpP) : restart, short for $prog -kX -sX where applicaple
     -s (p)   : start: p = start pulse sink if not running already
     -w       : wifi mode (use more buffering, pay with increased AV delay)
     -d       : debug mode: write a logfile $log_fn on the local and remote
@@ -59,6 +59,9 @@ examples:
         remote jackd    yes
         local jackd     yes
         jack_out sink   yes
+
+    Restart all, including pulseaudio
+        $ $prog -rjpP
 
     Disable pulse sink
         $ $prog -kp
@@ -278,6 +281,8 @@ fi
 checkopt $kill_what j && stop_jack
 checkopt $kill_what p && stop_pulse_sink
 checkopt $kill_what P && restart_pulse
+
+checkopt $restart_what P && restart_pulse
 
 if checkopt $restart_what j; then
     check_broken_pulse
