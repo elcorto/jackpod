@@ -20,9 +20,8 @@ P = pulseaudio service
 
 options:
     -S       : show status
-    -k (jpP) : kill stuff (pulseaudio (P) restarts automatically
-               after kill, so -kP = -rP)
-    -r (jpP) : restart, short for $prog -kX -sX where applicaple
+    -k (jpP) : kill stuff
+    -r (jpP) : restart, short for $prog -kX -sX where applicable
     -s (p)   : start: p = start pulse sink if not running already
     -w       : wifi mode (use more buffering, pay with increased AV delay)
     -d       : debug mode: write a logfile $log_fn on the local and remote
@@ -157,17 +156,12 @@ check_broken_pulse(){
     fi
 }
 
+stop_pulse(){
+    systemctl --user stop pulseaudio.service pulseaudio.socket
+}
+
 restart_pulse(){
-    # After kill, pulse restarts immediately, w/o module-jack-sink and
-    # jack_out.
-    pid=$(pgrep pulseaudio)
-    [ -n "$pid" ] && kill $pid
-    sleep 1
-    ps -eo pid | grep -q $pid && kill -9 $pid
-    while ! pgrep pulseaudio > /dev/null; do
-        sleep 0.1
-        echo "wait for pulseaudio ..."
-    done
+    systemctl --user restart pulseaudio.service
 }
 
 start_pulse_sink(){
@@ -280,7 +274,7 @@ fi
 
 checkopt $kill_what j && stop_jack
 checkopt $kill_what p && stop_pulse_sink
-checkopt $kill_what P && restart_pulse
+checkopt $kill_what P && stop_pulse
 
 checkopt $restart_what P && restart_pulse
 
