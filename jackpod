@@ -272,8 +272,8 @@ if $check_status; then
     exit 0
 fi
 
-checkopt $kill_what j && stop_jack
 checkopt $kill_what p && stop_pulse_sink
+checkopt $kill_what j && stop_jack
 checkopt $kill_what P && stop_pulse
 
 checkopt $restart_what P && restart_pulse
