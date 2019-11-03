@@ -12,7 +12,7 @@ log_fn=jack.log
 
 usage(){
     cat <<-EOF
-$prog [-S | -k (jpP) | -r (jp) | -s (p)] [-w -d]
+$prog [-S | -k (jpP) | -r (jpP) ] [-w -d]
 
 j = local and remote jackds in netjack2 mode
 p = pulseaudio sink "jack_out"
@@ -21,22 +21,10 @@ P = pulseaudio service
 options:
     -S       : show status
     -k (jpP) : kill stuff
-    -r (jpP) : restart, short for $prog -kX -sX where applicable
-    -s (p)   : start: p = start pulse sink if not running already
+    -r (jpP) : start or restart
     -w       : wifi mode (use more buffering, pay with increased AV delay)
     -d       : debug mode: write a logfile $log_fn on the local and remote
                machine
-
-The order of actions performed is: -S -k -r -s, so $prog -kX -sX will first
-kill, then start (same as -rX).
-
--rj: There is no -sj, we always -kj first before starting local and remote
-jackds in netjack2 mode. So think of this option as -kj -sj, except that -sj is
-performed internally but is not available as an option.
-
--sp is only useful if local and remote jackds are already running in netjack2
-mode (-rj), else a local jackd with default args is started (jackd -T -ndefault
--T -d alsa), which is useless.
 
 -rp: when we resume from suspend (to ram) mode, then the jackd connection
 (netjack2) is still active and only the pulse sink needs a restart -> no need
@@ -44,22 +32,16 @@ to kill the jackds, which takes a bit longer.
 
 examples:
 
-    Check status
-        $ $prog -S
-        remote jackd    NO
-        local jackd     NO
-        jack_out sink   NO
-
     This is what you call when you need to start all
-        $ $prog -rj -sp
-    or even shorter (-rp = -sp if sink is not running)
         $ $prog -rjp
+
+    Check status
         $ $prog -S
         remote jackd    yes
         local jackd     yes
         jack_out sink   yes
 
-    Restart all, including pulseaudio
+    (Re)start all, including pulseaudio
         $ $prog -rjpP
 
     Disable pulse sink
@@ -165,6 +147,9 @@ restart_pulse(){
 }
 
 start_pulse_sink(){
+    # This is only useful if local and remote jackds are already running in
+    # netjack2 mode (-rj), else a local jackd with default args is started
+    # (jackd -T -ndefault -T -d alsa), which is useless.
     check_broken_pulse
     if ! pactl list sinks | grep -q jack_out; then
         pactl load-module module-jack-sink >> $log 2>&1
@@ -235,7 +220,6 @@ remote_device="hw:sndrpihifiberry"
 # empty string. Yes this tool should be written in another language.
 none="::"
 kill_what=$none
-start_what=$none
 restart_what=$none
 
 # B/c of quoting foo, use
@@ -243,10 +227,9 @@ restart_what=$none
 ssh_cmd="ssh -o ConnectTimeout=2 -T $remote"
 
 
-while getopts k:s:wr:hSd opt; do
+while getopts k:wr:hSd opt; do
     case $opt in
         k) kill_what=$OPTARG;;
-        s) start_what=$OPTARG;;
         w) wifi_mode=true;;
         r) restart_what=$OPTARG;;
         S) check_status=true;;
@@ -286,4 +269,3 @@ if checkopt $restart_what j; then
 fi
 
 checkopt $restart_what p && restart_pulse_sink
-checkopt $start_what p && start_pulse_sink
