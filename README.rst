@@ -25,8 +25,8 @@ browser, and unlike ``mpv`` which can do that), use pulseaudio's
 (PulseAudio JACK Sink)", which is the ``jack_out`` sink created with ``jackpod
 -rp``.
 
-Latency & defaults
-==================
+Latency, WiFi, defaults
+=======================
 
 We hard-coded some values such as
 
@@ -40,10 +40,14 @@ Note that netjack2 is designed to be run over a stable cable connection. We
 achieve very low latency with no perceptible AV (audio-video) delay in this
 case -- important for video! There is the ``-w`` (WiFi mode) option which sets
 looser options (more buffering) that will increase the AV-delay a bit. This
-will need to be adjusted for your network. So far, we had stable and reliable
-connections only via cable or when surrounding WiFis are either off or use very
-different channels. So one could just as well use a 3.5 mm audio cable, right?
-Maybe, but it wouldn't be as cool!
+will need to be adjusted for your network. So far, we had stable connections
+only via cable or when (i) surrounding WiFis are off, (ii) use very different
+channels, (iii) we use 5 GHz-only Wifi which is much less crowded (many people
+still use 2.4 GHz, so less channel overlap).
+
+So .. with a bad Wifi setup, using an Ethernet cable is better  .. and one
+could just as well use a 3.5 mm audio cable instead, right? Sure, but it
+wouldn't be as cool!
 
 .. _netjack2: https://github.com/jackaudio/jackaudio.github.com/wiki/WalkThrough_User_NetJack2
 .. _hfb: https://www.hifiberry.com/shop/boards/hifiberry-dac-pro
