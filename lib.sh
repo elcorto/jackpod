@@ -12,6 +12,10 @@ err(){
     exit 1
 }
 
+msg(){
+    echo "$prog: $@"
+}
+
 yesno(){
     [ $1 -eq 0 ] && echo "yes" || echo "NO"
 }
@@ -127,4 +131,3 @@ EOF
     echo "jack_out sink: $(yesno $?)"
     ) | column -t -s:
 }
-

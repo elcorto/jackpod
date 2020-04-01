@@ -10,7 +10,7 @@ here=$(dirname $(readlink -f $0))
 . $here/settings.sh
 . $here/lib.sh
 
-prog=jackpod
+prog=$(basename $0)
 
 usage(){
     cat <<-EOF
