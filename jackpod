@@ -55,6 +55,9 @@ examples:
 
     Restart only pulse sink (e.g. after resuming from suspend mode)
         $ $prog -rp
+
+    Activate wifi settings:
+        $ $prog -rjp -w
 EOF
 }
 
