@@ -86,6 +86,11 @@ while getopts k:wr:hSd opt; do
 done
 shift $((OPTIND - 1))
 
+if $wifi_mode; then
+    checkopt $restart_what j || err "use -w with -r j; we need to \
+(re)start jackd to apply -w"
+fi
+
 set_opts $wifi_mode
 
 if $debug; then
