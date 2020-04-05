@@ -28,14 +28,14 @@ options:
     -d       : debug mode: write a logfile $log_fn on the local and remote
                machine
 
--rp: when we resume from suspend (to ram) mode, then the jackd connection
+-r p: when we resume from suspend (to ram) mode, then the jackd connection
 (netjack2) is still active and only the pulse sink needs a restart -> no need
 to kill the jackds, which takes a bit longer.
 
 examples:
 
     This is what you call when you need to start all
-        $ $prog -rjp
+        $ $prog -r jp
 
     Check status
         $ $prog -S
@@ -44,20 +44,20 @@ examples:
         jack_out sink   yes
 
     (Re)start all, including pulseaudio
-        $ $prog -rjpP
+        $ $prog -r jpP
 
     Disable pulse sink
-        $ $prog -kp
+        $ $prog -k p
         $ $prog -S
         remote jackd    yes
         local jackd     yes
         jack_out sink   NO
 
     Restart only pulse sink (e.g. after resuming from suspend mode)
-        $ $prog -rp
+        $ $prog -r p
 
     Activate wifi settings:
-        $ $prog -rjp -w
+        $ $prog -r jp -w
 EOF
 }
 

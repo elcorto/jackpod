@@ -8,9 +8,8 @@ connection between two machines.
 Usage
 =====
 
-Use the `jackpod` command to set up a netjack2 connection (`jackpod -rj`) and
-optionally start a pulseaudio sink (`jackpod -rp`, see `pactl list sinks`).
-
+Use the `jackpod` command to set up a netjack2 connection (`jackpod -r j`) and
+optionally start a pulseaudio sink (`jackpod -r p`, see `pactl list sinks`).
 
     jackpod [-S | -k (jpP) | -r (jpP) ] [-w -d]
 
@@ -26,14 +25,14 @@ optionally start a pulseaudio sink (`jackpod -rp`, see `pactl list sinks`).
         -d       : debug mode: write a logfile /tmp/jack.log on the local and remote
                    machine
 
-    -rp: when we resume from suspend (to ram) mode, then the jackd connection
+    -r p: when we resume from suspend (to ram) mode, then the jackd connection
     (netjack2) is still active and only the pulse sink needs a restart -> no need
     to kill the jackds, which takes a bit longer.
 
     examples:
 
         This is what you call when you need to start all
-            $ jackpod -rjp
+            $ jackpod -r jp
 
         Check status
             $ jackpod -S
@@ -42,20 +41,20 @@ optionally start a pulseaudio sink (`jackpod -rp`, see `pactl list sinks`).
             jack_out sink   yes
 
         (Re)start all, including pulseaudio
-            $ jackpod -rjpP
+            $ jackpod -r jpP
 
         Disable pulse sink
-            $ jackpod -kp
+            $ jackpod -k p
             $ jackpod -S
             remote jackd    yes
             local jackd     yes
             jack_out sink   NO
 
         Restart only pulse sink (e.g. after resuming from suspend mode)
-            $ jackpod -rp
+            $ jackpod -r p
 
         Activate wifi settings:
-            $ jackpod -rjp -w
+            $ jackpod -r jp -w
 
 See `README_jack.md` for details.
 
@@ -73,7 +72,7 @@ card
 For sound sources that cannot select the backend they play on (such as the
 browser, and unlike `mpv` which can do that), use pulseaudio's `pavucontrol`
 tool to redirect sound to the sink called "Jack sink (PulseAudio JACK Sink)",
-which is the `jack_out` sink created with `jackpod -rp`.
+which is the `jack_out` sink created with `jackpod -r p`.
 
 Latency, WiFi, defaults
 =======================
