@@ -7,7 +7,7 @@ set_opts(){
     if $wifi_mode; then
         remote_opts="-r"
         local_opts="-r"
-        remote_driver_opts="--nperiods 2 --period 512"
+        remote_driver_opts="--nperiods 2 --period 1024"
         local_driver_opts="-l1"
     else
         remote_opts="-R"
