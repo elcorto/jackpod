@@ -1,0 +1,18 @@
+[Unit]
+Description=jackpod-restart-pulse-sink
+After=suspend.target network-online.target
+# This casuses
+#   jackpod-restart-pulse-sink.service: Job jackpod-restart-pulse-sink.service/start failed with result 'dependency'.
+##Requisite=network-online.target
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/1001
+User=elcorto
+Type=oneshot
+ExecStart=/home/elcorto/soft/git/jackpod/systemd/jackpod-restart-pulse-sink.sh
+
+[Install]
+WantedBy=suspend.target
+
+# Thanks:
+# https://github.com/brummer10/pajackconnect/blob/master/resume-fix-pulseaudio.service

@@ -1,0 +1,11 @@
+[Unit]
+Description=jackpod-watch-connection
+Wants=network-online.target puslseaudio.service
+After=network-online.target puslseaudio.service
+
+[Service]
+Type=simple
+ExecStart=/home/elcorto/soft/git/jackpod/systemd/jackpod-watch-connection.sh
+
+[Install]
+WantedBy=multi-user.target
